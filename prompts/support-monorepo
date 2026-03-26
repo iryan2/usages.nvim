@@ -1,0 +1,36 @@
+When working on the /Users/work/projects/OctopusDeploy/frontend project have both apps/portal/app/App.tsx and packages/design-system-components/src/components/Button/Button.tsx open in neovim and I find references via LSP, I see all the Button references across the portal codebase. However, when I invoke :ReactAncestors, all I see in the sidebar is `Button`. Can you help figure out how to support cross-package reference lookups within a pnpm monorepo?
+
+----------
+
+Your plan mentions
+> Keep only a single concise vim.notify summary at the end (e.g., "Button: 444 refs → 30 ancestors")
+
+Instead of that, can we put the summary at the top of our side panel UI? I'd like to avoid using vim.notify unless something goes wrong.
+
+----------
+
+When working on the /Users/work/projects/OctopusDeploy/frontend project have both apps/portal/app/App.tsx and packages/design-system-components/src/components/Button/Button.tsx open in neovim and I invoke :ReactAncestors, I see all the Button references across the portal codebase, and can explore the ancestry (almost) as expected. 
+
+Is there a reason the ancestry stops at allPageRegistrations? I know that file is not a typical react component, but it'd be nice to be able to continue drilling upwards through it. For example, one of the usages of `Button` is in `ApiKeysPage`. If I run :ReactAncestors on `Button`, then attempt to expand `ApiKeysPage`, nothing shows. Same result if I run :ReactAncestors on `ApiKeysPage` directly.
+
+-------
+
+Cool, that's an improvement but now the leaf nodes are things like ConfigurationRoutes and InfrastructureRoutes: 
+
+```
+  ▼ ApiKeysPage                         apps/portal/app/areas/configuration/components/ApiKeys/ApiKeysPage.tsx:191
+    ▼ allPages                          apps/portal/app/routing/pageRegistrations/allPageRegistrations.tsx:826
+      ○ AllPageRoutes                   apps/portal/app/routing/AllPageRoutes.tsx:92
+      · ConfigurationRoutes             apps/portal/app/routing/AllPageRoutes.tsx:734
+      · InfrastructureRoutes            apps/portal/app/routing/AllPageRoutes.tsx:185
+```
+
+Is there any reason we can't keep going up the call chain?
+
+--------
+
+Would it be possible to invoke the command on usages, rather than just defintions? For example, if I have a Button usage in ApiKeysPage, could I run :ReactAncestors when my cursor is on `Button` and see the ancestors of that usage? Currently it'd show me the ancestors of ApiKeysPage.
+
+---------
+
+Can we make the preview togglable? Use 'p' as the keybinding to toggle the preview window on and off. When it's on, it should show a preview of the currently selected ancestor in the sidebar. When it's off, it should hide the preview window. Add a little key showing the various bindings at the bottom of the sidebar (e.g., "p: toggle preview | q: quit | <Enter>: jump to ancestor"). The preview should be on by defualt.
